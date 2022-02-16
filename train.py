@@ -6,9 +6,6 @@ from sklearn.pipeline import make_pipeline, make_union
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import CountVectorizer
 
-from skl2onnx import convert_sklearn
-from skl2onnx.common.data_types import StringTensorType
-
 console = Console()
 
 # Load the training data
@@ -29,13 +26,17 @@ pipe = make_pipeline(
 pipe.fit(X, y)
 console.log("ML Pipeline fitted.")
 
+dump(pipe, 'pipe.joblib')
+console.log("Joblib pickle saved.")
+
 # Convert everything to the onnx format.
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import StringTensorType
+
+
 initial_type = [('float_input', StringTensorType([None, 1]))]
 onx = convert_sklearn(pipe, initial_types=initial_type)
 
 with open("clinc-logreg.onnx", "wb") as f:
     f.write(onx.SerializeToString())
 console.log("ONNX format saved.")
-
-dump(pipe, 'pipe.joblib')
-console.log("Joblib pickle saved.")
