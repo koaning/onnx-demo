@@ -1,24 +1,25 @@
-import random
-from locust import HttpUser, between, task
+import time 
+from joblib import load
 
-class WebsiteUser(HttpUser):
-    wait_time = between(0.2, 1.0)
+import onnxruntime as rt
+import numpy as np
 
-    def on_start(self):
-        self.uid = str(random.randint(0, 100_000)).zfill(6)
+sess = rt.InferenceSession("clinc-logreg.onnx")
+input_name = sess.get_inputs()[0].name
+label_name = sess.get_outputs()[0].name
 
-    @task
-    def getter(self):
-        self.client.get("/")
-        
-    @task
-    def simulate1(self):
-        self.client.post("/predict/", json={
-            "text": "kiekt 'm gaan jongh"
-        })
-    
-    @task
-    def simulate2(self):
-        self.client.post("/sk_predict/", json={
-            "text": "kiekt 'm gaan jongh"
-        })
+pipe = load('pipe.joblib')
+
+text = "this is an example sentence"
+n = 1000
+
+t0 = time.time()
+for i in range(n):
+    pipe.predict_proba([text])
+t1 = time.time()
+for i in range(n):
+    _, probas = sess.run(None, {input_name: np.array([[text]])})
+t2 = time.time()
+
+print(f"SKLEARN: {round(t1 - t0, 3)} s")
+print(f"   ONNX: {round(t2 - t1, 3)} s")
