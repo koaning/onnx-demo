@@ -17,9 +17,7 @@ y = df['label']
 
 # Make a very basic machine learning pipeline
 pipe = make_pipeline(
-    make_union(
-        CountVectorizer(),
-    ), 
+    CountVectorizer(),
     LogisticRegression()
 )
 
